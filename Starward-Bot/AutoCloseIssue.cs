@@ -30,9 +30,9 @@ public class AutoCloseIssue
 
         foreach (var issue in issues)
         {
-            if (issue.PullRequest != null || issue.Labels.Any(x => x.Name is "triage" or "bug" or "enhancement" or "document"))
+            if (issue.PullRequest != null || issue.Labels.Any(x => x.Name is "triage" or "bug" or "enhancement" or "documentation" or "keep open"))
             {
-                _logger.LogInformation($"Skip issue {issue.Number}.");
+                _logger.LogInformation("Skip issue {issue.Number}.", issue.Number);
                 continue;
             }
             if (issue.UpdatedAt != null && issue.UpdatedAt < DateTimeOffset.Now - TimeSpan.FromDays(14))
