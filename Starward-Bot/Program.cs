@@ -9,10 +9,12 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services =>
     {
+        services.AddHttpClient();
         services.AddMemoryCache();
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
         services.AddSingleton<WebhookEventProcessor, IssueEventProcessor>();
+        services.AddSingleton<WebhookEventProcessor, ReleaseEventProcessor>();
     })
     .ConfigureGitHubWebhooks(Environment.GetEnvironmentVariable("WEBHOOK_SECRET"))
     .Build();

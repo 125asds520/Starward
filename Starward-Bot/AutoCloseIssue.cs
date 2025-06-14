@@ -19,7 +19,7 @@ public class AutoCloseIssue
     public async Task RunAsync([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
-        var client = await GithubUtil.CreateGithubClient();
+        (var client, _) = await GithubUtil.CreateGithubClient();
         var req = new RepositoryIssueRequest
         {
             SortProperty = IssueSort.Updated,

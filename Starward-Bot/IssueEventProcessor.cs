@@ -37,8 +37,9 @@ internal class IssueEventProcessor : WebhookEventProcessor
             _client = client!;
             return;
         }
-        client = await GithubUtil.CreateGithubClient();
-        _memory.Set("GithubClient", client, DateTimeOffset.Now + TimeSpan.FromSeconds(10));
+        (client, var httpClient) = await GithubUtil.CreateGithubClient();
+        _memory.Set("GithubClient", client, DateTimeOffset.Now + TimeSpan.FromMinutes(5));
+        _memory.Set("GithubHttpClient", httpClient, DateTimeOffset.Now + TimeSpan.FromMinutes(5));
         _client = client;
     }
 
@@ -71,7 +72,7 @@ internal class IssueEventProcessor : WebhookEventProcessor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Handle issue event");
+            _logger.LogError(ex, "Handle issue event: " + ex.ToString());
             throw;
         }
     }
@@ -109,8 +110,8 @@ internal class IssueEventProcessor : WebhookEventProcessor
             issueUpdate.AddLabel("invalid");
             issueUpdate.State = ItemState.Closed;
             issueUpdate.StateReason = ItemStateReason.NotPlanned;
-            await _client.Issue.Comment.Create(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, "This issue will be closed for no title or content.");
-            await _client.Issue.Update(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, issueUpdate);
+            await _client.Issue.Comment.Create("Scighost", "Starward", (int)issuesEvent.Issue.Number, "This issue will be closed for no title or content.");
+            await _client.Issue.Update("Scighost", "Starward", (int)issuesEvent.Issue.Number, issueUpdate);
         }
     }
 
@@ -123,7 +124,7 @@ internal class IssueEventProcessor : WebhookEventProcessor
             var issue = await _client.Issue.Get("Scighost", "Starward", (int)issuesEvent.Issue.Number);
             var issueUpdate = issue.ToUpdate();
             issueUpdate.RemoveLabel("triage");
-            await _client.Issue.Update(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, issueUpdate);
+            await _client.Issue.Update("Scighost", "Starward", (int)issuesEvent.Issue.Number, issueUpdate);
         }
     }
 
@@ -144,7 +145,7 @@ internal class IssueEventProcessor : WebhookEventProcessor
                 issueUpdate.State = ItemState.Closed;
                 issueUpdate.StateReason = ItemStateReason.NotPlanned;
                 await _client.Issue.Comment.Create("Scighost", "Starward", (int)issuesEvent.Issue.Number, "This issue will be closed for something invalid.\n由于存在无效内容，该 issue 将被关闭。");
-                await _client.Issue.Update(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, issueUpdate);
+                await _client.Issue.Update("Scighost", "Starward", (int)issuesEvent.Issue.Number, issueUpdate);
             }
             else if (issuesEvent.Issue.Labels.Any(x => x.Name is "duplicate"))
             {
@@ -153,7 +154,7 @@ internal class IssueEventProcessor : WebhookEventProcessor
                 issueUpdate.State = ItemState.Closed;
                 issueUpdate.StateReason = ItemStateReason.NotPlanned;
                 await _client.Issue.Comment.Create("Scighost", "Starward", (int)issuesEvent.Issue.Number, "This issue will be closed for duplicate.\n重复的 issue 将被关闭。");
-                await _client.Issue.Update(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, issueUpdate);
+                await _client.Issue.Update("Scighost", "Starward", (int)issuesEvent.Issue.Number, issueUpdate);
             }
             else if (issuesEvent.Issue.Labels.Any(x => x.Name is "need more info"))
             {
@@ -162,7 +163,7 @@ internal class IssueEventProcessor : WebhookEventProcessor
                 issueUpdate.State = ItemState.Closed;
                 issueUpdate.StateReason = ItemStateReason.NotPlanned;
                 await _client.Issue.Comment.Create("Scighost", "Starward", (int)issuesEvent.Issue.Number, "Sorry, based on the information you provided, the developer is unable to resolve this issue.\n很抱歉，根据您提供的信息，开发者无法解决此问题。");
-                await _client.Issue.Update(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, issueUpdate);
+                await _client.Issue.Update("Scighost", "Starward", (int)issuesEvent.Issue.Number, issueUpdate);
             }
             else if (issuesEvent.Issue.Labels.Any(x => x.Name is "do not understand"))
             {
@@ -171,7 +172,7 @@ internal class IssueEventProcessor : WebhookEventProcessor
                 issueUpdate.State = ItemState.Closed;
                 issueUpdate.StateReason = ItemStateReason.NotPlanned;
                 await _client.Issue.Comment.Create("Scighost", "Starward", (int)issuesEvent.Issue.Number, "Thank you for your feedback or suggestions, but we're sorry that the developer couldn't understand what you posted.\n感谢您的反馈或建议，但是很抱歉，开发者无法理解您发布的内容。");
-                await _client.Issue.Update(issuesEvent.Repository.Id, (int)issuesEvent.Issue.Number, issueUpdate);
+                await _client.Issue.Update("Scighost", "Starward", (int)issuesEvent.Issue.Number, issueUpdate);
             }
         }
     }
